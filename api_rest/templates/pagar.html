@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagar su Compra</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="static/css/styles.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Confirmar Pago</h1>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Detalles de su Compra</h5>
+                <div id="detalles-compra">
+                    <p class="card-text"><strong>Producto:</strong> <span id="producto-nombre"></span></p>
+                    <p class="card-text"><strong>Sucursal:</strong> <span id="sucursal-nombre"></span></p>
+                    <p class="card-text"><strong>Cantidad:</strong> <span id="cantidad"></span></p>
+                    <p class="card-text"><strong>Precio Unitario:</strong> $<span id="precio-clp"></span> CLP</p>
+                    <p class="card-text"><strong>Precio Unitario Dolar:</strong> <span id="precio-usd"></span> USD</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <h2 id="total-a-pagar"></h2>
+            <button id="boton-pagar" class="btn btn-primary btn-lg">Pagar y Finalizar Compra</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const detallesCompraDiv = document.getElementById('detalles-compra');
+            const totalAPagarDiv = document.getElementById('total-a-pagar');
+            const botonPagar = document.getElementById('boton-pagar');
+
+            const productoNombreSpan = document.getElementById('producto-nombre');
+            const sucursalNombreSpan = document.getElementById('sucursal-nombre');
+            const cantidadSpan = document.getElementById('cantidad');
+            const precioClpSpan = document.getElementById('precio-clp');
+            const precioUsdSpan = document.getElementById('precio-usd');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const sucursalId = urlParams.get('sucursal_id');
+            const productoId = urlParams.get('producto_id');
+            const cantidad = parseInt(urlParams.get('cantidad'));
+            const productoNombre = decodeURIComponent(urlParams.get('producto_nombre'));
+            const sucursalNombre = decodeURIComponent(urlParams.get('sucursal_nombre'));
+            const precioUnitarioClp = parseFloat(urlParams.get('precio_clp'));
+            const precioUnitarioUsd = parseFloat(urlParams.get('precio_usd'));
+
+            productoNombreSpan.textContent = productoNombre;
+            sucursalNombreSpan.textContent = sucursalNombre;
+            cantidadSpan.textContent = cantidad;
+            precioClpSpan.textContent = isNaN(precioUnitarioClp) ? 'No Disponible' : precioUnitarioClp.toLocaleString('es-CL');
+            precioUsdSpan.textContent = !isNaN(precioUnitarioUsd) ? ` $${precioUnitarioUsd.toFixed(2)}` : 'No Disponible';
+
+            if (!isNaN(cantidad) && !isNaN(precioUnitarioClp)) {
+                const totalClp = cantidad * precioUnitarioClp;
+                totalAPagarDiv.innerHTML = `<h2>Total a Pagar: <span class="badge badge-success">$${totalClp.toLocaleString('es-CL')} CLP</span></h2>`;
+            } else {
+                totalAPagarDiv.innerHTML = `<p class="text-danger">Error al calcular el total.</p>`;
+            }
+
+            botonPagar.addEventListener('click', function() {
+                if (cantidad > 0 && sucursalId && productoId) {
+                    const url = `/sucursales/${sucursalId}/productos/${productoId}/stock`;
+                    const data = { cantidad: -cantidad };
+                    const headers = { 'Content-Type': 'application/json' };
+                    const body = JSON.stringify(data);
+
+                    fetch(url, { method: 'PUT', headers: headers, body: body })
+                        .then(response => {
+                            console.log('Respuesta del servidor:', response); // Log de la respuesta completa
+                                if (response.ok) {
+                                    window.location.href = `/gracias.html?producto_nombre=${encodeURIComponent(productoNombre)}&cantidad=${cantidad}&total=${cantidad * precioUnitarioClp}`;
+                                } else {
+                                    response.json().then(errorData => {
+                                        console.error('Error en la respuesta del servidor:', errorData);
+                                        alert('Ocurrió un error al procesar su pago.');
+                                    });
+                                }
+                            })
+                        .catch(error => {
+                            console.error('Error de red:', error);
+                            alert('Ocurrió un error de red al procesar su pago.');
+                        });
+                } else {
+                    alert('Los detalles de la compra son inválidos.');
+                }
+            });
+        });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

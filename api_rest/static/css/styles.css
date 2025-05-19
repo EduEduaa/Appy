@@ -1,0 +1,69 @@
+/* styles.css */
+.resultado-item {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #f8f9fa;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.resultado-item strong {
+    font-weight: bold;
+}
+
+.sucursal-selector {
+    margin-top: 10px;
+}
+
+.compra-options {
+    margin-top: 10px;
+    padding: 15px;
+    border: 1px solid #e9ecef;
+    background-color: #e9ecef;
+    border-radius: 5px;
+}
+
+.compra-options h3 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.compra-options label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.compra-options input[type="number"] {
+    width: 100px;
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.compra-options button {
+    padding: 8px 15px;
+    margin-top: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.calcular-total-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+}
+
+.calcular-total-btn:hover {
+    background-color: #218838;
+}
+
+.realizar-compra-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    margin-left: 10px;
+}
+
+.realizar-compra-btn:hover {
+    background-color: #0056b3;
+}

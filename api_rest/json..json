@@ -1,0 +1,58 @@
+{
+  "sucursales": [
+    {"nombre": "Casa Matriz Concepción", "direccion": "Avenida Principal 100, Concepción"},
+    {"nombre": "Sucursal Centro Hualpén", "direccion": "Calle Principal 123, Hualpén"},
+    {"nombre": "Sucursal Norte Talcahuano", "direccion": "Avenida La Unión 456, Talcahuano"},
+    {"nombre": "Sucursal Sur San Pedro", "direccion": "Los Fresnos 789, San Pedro de la Paz"}
+  ],
+  "productos": [
+    {"nombre": "Laptop"},
+    {"nombre": "Mouse"},
+    {"nombre": "Teclado"},
+    {"nombre": "Monitor"}
+  ],
+  "stock": [
+    {
+      "sucursal_id": 1,
+      "producto_id": 1,
+      "cantidad": 20,
+      "precio": 820000
+    },
+    {
+      "sucursal_id": 1,
+      "producto_id": 2,
+      "cantidad": 100,
+      "precio": 18990
+    },
+    {
+      "sucursal_id": 1,
+      "producto_id": 3,
+      "cantidad": 75,
+      "precio": 52000
+    },
+    {
+      "sucursal_id": 1,
+      "producto_id": 4,
+      "cantidad": 30,
+      "precio": 210000
+    },
+    {
+      "sucursal_id": 2,
+      "producto_id": 1,
+      "cantidad": 10,
+      "precio": 850000
+    },
+    {
+      "sucursal_id": 2,
+      "producto_id": 2,
+      "cantidad": 50,
+      "precio": 19990
+    },
+    {
+      "sucursal_id": 4,
+      "producto_id": 2,
+      "cantidad": 25,
+      "precio": 21500
+    }
+  ]
+}
