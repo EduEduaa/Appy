@@ -279,6 +279,35 @@ def eliminar_stock(sucursal_id, producto_id):
     return jsonify({'resultado': True})
 
 
+#### Crud Ventas
+
+@app.route('/ventas', methods=['GET'])
+def listar_ventas():
+    try:
+        ventas = Venta.query.all()
+
+        resultado = []
+        for venta in ventas:
+            for detalle in venta.detalles:
+                producto = Producto.query.get(detalle.producto_id)
+                sucursal = Sucursal.query.get(venta.sucursal_id)
+
+                resultado.append({
+                    'fecha': venta.fecha.strftime('%Y-%m-%d'),
+                    'sucursal': sucursal.nombre if sucursal else 'Sucursal desconocida',
+                    'producto': producto.nombre if producto else 'Producto desconocido',
+                    'cantidad': detalle.cantidad,
+                    'precio_unitario': detalle.precio_unitario,
+                 
+                    'total_venta': venta.total
+                })
+
+        return render_template('listar_ventas.html', ventas=resultado)
+
+    except Exception as e:
+        print(f"Error al obtener ventas: {e}")
+        return jsonify({'error': 'Error al listar ventas'}), 500
+
 @app.route('/ventas', methods=['POST'])
 def registrar_venta():
     data = request.get_json()
