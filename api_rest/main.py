@@ -1,9 +1,10 @@
-from flask import Flask, jsonify, request, render_template,Response
-from models import db, Sucursal, Producto, Stock
+from flask import Flask, jsonify, request, render_template,Response,abort
+from models import db, Sucursal, Producto, Stock,Venta, DetalleVenta 
 from sqlalchemy.exc import SQLAlchemyError
 import time
 import json
-
+from datetime import datetime
+from functools import wraps
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/tienda'
@@ -11,6 +12,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 app.debug = True
 
+API_TOKEN = "mi_api_key_segura_abc123"
+
+def require_api_token(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if token != f"Bearer {API_TOKEN}":
+            abort(401, description="No autorizado. Token inválido o faltante.")
+        return f(*args, **kwargs)
+    return decorated_function
 # inicio 
 @app.route('/')
 def index():
@@ -108,6 +119,7 @@ def obtener_sucursal(sucursal_id):
 # para ingresar lista json sucursales 
 
 @app.route('/sucursales', methods=['POST'])
+@require_api_token
 def crear_sucursal():
     data = request.get_json()
     if not isinstance(data, list):
@@ -265,6 +277,69 @@ def eliminar_stock(sucursal_id, producto_id):
     db.session.delete(stock_item)
     db.session.commit()
     return jsonify({'resultado': True})
+
+
+@app.route('/ventas', methods=['POST'])
+def registrar_venta():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Datos no proporcionados'}), 400
+
+    sucursal_id = data.get('sucursal_id')
+    productos = data.get('productos')  # Lista de dicts: [{'producto_id': 1, 'cantidad': 2}, ...]
+
+    if not sucursal_id or not productos:
+        return jsonify({'error': 'Faltan datos: sucursal_id o productos'}), 400
+
+    total_venta = 0
+    detalles = []
+
+    try:
+        for item in productos:
+            producto_id = item.get('producto_id')
+            cantidad = item.get('cantidad')
+
+            if not producto_id or not cantidad:
+                return jsonify({'error': 'Producto o cantidad inválida'}), 400
+
+            stock_item = Stock.query.filter_by(sucursal_id=sucursal_id, producto_id=producto_id).first()
+            if not stock_item or stock_item.cantidad < cantidad:
+                return jsonify({'error': f'Sin stock suficiente para el producto ID {producto_id}'}), 400
+
+            # Calcular subtotal y descontar del stock
+            subtotal = cantidad * stock_item.precio
+            total_venta += subtotal
+            stock_item.cantidad -= cantidad
+
+            detalle = DetalleVenta(
+                producto_id=producto_id,
+                cantidad=cantidad,
+                precio_unitario=stock_item.precio
+            )
+            detalles.append(detalle)
+
+        # Crear la venta
+        nueva_venta = Venta(
+            sucursal_id=sucursal_id,
+            fecha=datetime.utcnow(),
+            total=total_venta
+        )
+        db.session.add(nueva_venta)
+        db.session.flush()  # Obtener el ID antes del commit
+
+        for detalle in detalles:
+            detalle.venta_id = nueva_venta.id
+            db.session.add(detalle)
+
+        db.session.commit()
+
+        return jsonify({'mensaje': 'Venta registrada exitosamente', 'venta_id': nueva_venta.id}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: {e}")
+        return jsonify({'error': 'Error al registrar la venta'}), 500
+
 
 
 #para importar todo Json 

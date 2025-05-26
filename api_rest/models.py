@@ -27,3 +27,18 @@ class Stock(db.Model):
 
     def __repr__(self):
         return f"<Stock sucursal_id={self.sucursal_id}, producto_id={self.producto_id}>"
+
+class Venta(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sucursal_id = db.Column(db.Integer, db.ForeignKey('sucursal.id'), nullable=False)
+    fecha = db.Column(db.DateTime, nullable=False)
+    total = db.Column(db.Float, nullable=False)
+
+    detalles = db.relationship('DetalleVenta', backref='venta', lazy=True)
+
+class DetalleVenta(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    venta_id = db.Column(db.Integer, db.ForeignKey('venta.id'), nullable=False)
+    producto_id = db.Column(db.Integer, db.ForeignKey('producto.id'), nullable=False)
+    cantidad = db.Column(db.Integer, nullable=False)
+    precio_unitario = db.Column(db.Float, nullable=False)    
