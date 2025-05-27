@@ -29,7 +29,8 @@
         </div>
     </div>
 
-   <script>
+
+  <script>
     document.addEventListener('DOMContentLoaded', function () {
         const detallesCompraDiv = document.getElementById('detalles-compra');
         const totalAPagarDiv = document.getElementById('total-a-pagar');
@@ -41,7 +42,6 @@
         const precioClpSpan = document.getElementById('precio-clp');
         const precioUsdSpan = document.getElementById('precio-usd');
 
-        // Obtener datos desde la URL
         const urlParams = new URLSearchParams(window.location.search);
         const sucursalId = urlParams.get('sucursal_id');
         const productoId = urlParams.get('producto_id');
@@ -51,7 +51,6 @@
         const precioUnitarioClp = parseFloat(urlParams.get('precio_clp'));
         const precioUnitarioUsd = parseFloat(urlParams.get('precio_usd'));
 
-        // Mostrar detalles
         productoNombreSpan.textContent = productoNombre;
         sucursalNombreSpan.textContent = sucursalNombre;
         cantidadSpan.textContent = cantidad;
@@ -65,48 +64,30 @@
             totalAPagarDiv.innerHTML = `<p class="text-danger">Error al calcular el total.</p>`;
         }
 
-        // Manejo del botón de pago
         botonPagar.addEventListener('click', function () {
             if (cantidad > 0 && sucursalId && productoId) {
-                const urlStock = `/sucursales/${sucursalId}/productos/${productoId}/stock`;
-                const dataStock = { cantidad: -cantidad };
+                const urlVenta = '/ventas';
+                const ventaData = {
+                    sucursal_id: parseInt(sucursalId),
+                    productos: [
+                        {
+                            producto_id: parseInt(productoId),
+                            cantidad: cantidad
+                        }
+                    ]
+                };
                 const headers = { 'Content-Type': 'application/json' };
 
-                // Actualizar stock
-                fetch(urlStock, {
-                    method: 'PUT',
+                fetch(urlVenta, {
+                    method: 'POST',
                     headers: headers,
-                    body: JSON.stringify(dataStock)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error al actualizar el stock');
-                    }
-
-                    // Registrar venta
-                    const urlVenta = '/ventas';
-                    const ventaData = {
-                        sucursal_id: parseInt(sucursalId),
-                        productos: [
-                            {
-                                producto_id: parseInt(productoId),
-                                cantidad: cantidad
-                            }
-                        ]
-                    };
-
-                    return fetch(urlVenta, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(ventaData)
-                    });
+                    body: JSON.stringify(ventaData)
                 })
                 .then(response => {
                     if (response.ok) {
-                        // Redirigir a página de agradecimiento
                         window.location.href = `/gracias.html?producto_nombre=${encodeURIComponent(productoNombre)}&cantidad=${cantidad}&total=${cantidad * precioUnitarioClp}`;
                     } else {
-                        return response.json().then(errorData => {
+                        response.json().then(errorData => {
                             console.error('Error al registrar la venta:', errorData);
                             alert('Ocurrió un error al registrar la venta.');
                         });
@@ -114,7 +95,7 @@
                 })
                 .catch(error => {
                     console.error('Error general:', error);
-                    alert('Ocurrió un error al procesar su pago.');
+                    alert('Ocurrió un error inesperado.');
                 });
             } else {
                 alert('Los detalles de la compra son inválidos.');
