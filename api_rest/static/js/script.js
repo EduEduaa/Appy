@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const alertasDiv = document.createElement('div');
     alertasDiv.id = 'alertas-sse';
     alertasDiv.classList.add('mt-3');
-    document.querySelector('.container').prepend(alertasDiv);
+    buscadorForm.parentNode.insertBefore(alertasDiv, buscadorForm.nextSibling);
 
     let eventSource;
     let productoSeleccionado = null;

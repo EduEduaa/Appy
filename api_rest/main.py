@@ -60,7 +60,6 @@ def sse_stream():
     def generate():
         sse_clients.append(request)
         # respuesta generada de la coneccion 
-        yield f"data: {json.dumps({'mensaje': 'Conexión SSE establecida'})}\n\n"
         try:
             yield from eventos_sse()
         finally:
