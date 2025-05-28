@@ -7,30 +7,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscador y Compra de Productos</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
     <link rel="stylesheet" href="static/css/styles.css">
+
 </head>
 <body>
-    <div class="container mt-5">
-    <h1 class="mb-4">Buscador y Compra de Productos</h1>
-      <form id="buscador" class="form-inline mb-3">
-            <label for="nombre_producto" class="mr-2">Nombre del Producto:</label>
-            <input type="text" class="form-control mr-sm-2" id="nombre_producto" name="nombre_producto">
-            <button type="submit" class="btn btn-primary">Buscar</button>
-        </form>
+   
+<div class="container mt-5">
+   <div class="d-flex justify-content-end mb-2">
+    <a href="/ventas" class="btn btn-secondary">
+        <i class="bi bi-clock-history"></i>
+    </a>
     </div>
-    <div class="container mt-5">
-        
-      
-        <div id="resultados">
-        </div>
+  
 
-        <div id="compra-detalle">
-        </div>
+  <h1 class="mb-4">Buscador y Compra de Productos</h1>
 
-        <div id="total-compra">
-        </div>
+  <form id="buscador" class="form-inline mb-3">
+    <label for="nombre_producto" class="mr-2">Nombre del Producto:</label>
+    <input type="text" class="form-control mr-sm-2" id="nombre_producto" name="nombre_producto">
+    <button type="submit" class="btn btn-primary">Buscar</button>
+  </form>
+</div>
 
-    </div>
+<div class="container mt-5">
+  <div id="resultados"></div>
+  <div id="compra-detalle"></div>
+  <div id="total-compra"></div>
+</div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>

@@ -58,7 +58,7 @@
 }
 
 
-# http://localhost:5000/sucursales
+// http://localhost:5000/sucursales
 
 [
   {"nombre": "Casa Matriz Concepción", "direccion": "Avenida Principal 100, Concepción"},
@@ -67,7 +67,7 @@
   {"nombre": "Sucursal Sur San Pedro", "direccion": "Los Fresnos 789, San Pedro de la Paz"}
 ]
 
-# http://localhost:5000/productos
+// http://localhost:5000/productos
 
 [
   {"nombre": "Laptop"},
@@ -76,7 +76,7 @@
   {"nombre": "Monitor"}
 ]
 
-# http://localhost:5000/stock/bulk
+// http://localhost:5000/stock/bulk
 
 [
   {
