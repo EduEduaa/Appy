@@ -15,7 +15,9 @@ class Producto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(80), nullable=False)
     precio = db.Column(db.Float, nullable=False)
-    imagen = db.Column(db.String(255), nullable=True) # Guarda la URL o la ruta de la imagen
+    imagen = db.Column(db.String(255), nullable=True) 
+    stocks = db.relationship('Stock', backref='producto', lazy=True, cascade='all, delete-orphan')
+    detalles_venta = db.relationship('DetalleVenta', backref='producto', lazy=True)
 
     def __repr__(self):
         return f"<Producto {self.nombre}>"
@@ -34,7 +36,7 @@ class Venta(db.Model):
     fecha = db.Column(db.DateTime, nullable=False)
     total = db.Column(db.Float, nullable=False)
 
-    detalles = db.relationship('DetalleVenta', backref='venta', lazy=True)
+    detalles = db.relationship('DetalleVenta', backref='venta', lazy=True, cascade='all, delete-orphan')
 
 class DetalleVenta(db.Model):
     id = db.Column(db.Integer, primary_key=True)
