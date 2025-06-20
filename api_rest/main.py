@@ -402,12 +402,11 @@ def buscar_producto():
                 }
                 resultados.append(resultado)
 
-                # **Importante:** La lógica para enviar alertas SSE directamente desde aquí
-                # a 'sse_clients' que son objetos 'Response' no es práctica ni escalable.
+            
                 # Para un sistema de notificación en tiempo real, deberías usar:
                 # 1. Una librería como Flask-SSE (que se integra con Redis u otra cola de mensajes).
                 # 2. Un sistema de cola de mensajes (RabbitMQ, Kafka) con un microservicio de Websockets/SSE.
-                # Aquí, solo imprimimos una alerta a la consola como demostración.
+       
                 if item_stock.cantidad == 0:
                     print(f"ALERTA STOCK 0: ¡El producto {producto.nombre} en la sucursal {sucursal.nombre} tiene stock 0!")
     return jsonify({'resultados': resultados})
@@ -711,7 +710,7 @@ def listar_ventas():
             sucursal = db.session.get(Sucursal, venta.sucursal_id)
             ventas_agrupadas[venta_id] = {
                 'id_venta': venta.id,
-                'fecha': venta.fecha.strftime('%Y-%m-%d %H:%M:%S'),
+                'fecha': venta.fecha.strftime('%Y-%m-%d'),
                 'sucursal_nombre': sucursal.nombre if sucursal else 'Sucursal desconocida',
                 'total_venta': venta.total,
                 'detalles': [] 

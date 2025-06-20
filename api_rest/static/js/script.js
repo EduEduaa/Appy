@@ -6,11 +6,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const alertasDiv = document.createElement('div');
     alertasDiv.id = 'alertas-sse';
     alertasDiv.classList.add('mt-3');
+    // Inserta las alertas después del formulario del buscador
     buscadorForm.parentNode.insertBefore(alertasDiv, buscadorForm.nextSibling);
 
     let eventSource;
     let productoSeleccionado = null; // Almacena el producto y la sucursal seleccionada
 
+    // --- Función para mostrar alertas SSE ---
     function mostrarAlertaSSE(mensaje) {
         const alerta = document.createElement('div');
         alerta.classList.add('alert', 'alert-warning', 'alert-dismissible', 'fade', 'show', 'mt-2');
@@ -20,18 +22,19 @@ document.addEventListener('DOMContentLoaded', function() {
         cerrarButton.classList.add('btn-close'); // Clase de Bootstrap 5 para cerrar
         cerrarButton.setAttribute('data-bs-dismiss', 'alert'); // Atributo de Bootstrap 5
         cerrarButton.setAttribute('aria-label', 'Cerrar');
-        // cerrarButton.innerHTML = '<span aria-hidden="true">&times;</span>'; // No necesario con btn-close
         alerta.appendChild(cerrarButton);
         alertasDiv.appendChild(alerta);
 
+        // Eliminar la alerta automáticamente después de 5 segundos
         setTimeout(() => {
             alerta.remove();
         }, 5000);
     }
 
     // --- Configuración de Server-Sent Events (SSE) ---
+    // Verifica si el navegador soporta EventSource
     if (typeof EventSource !== 'undefined') {
-        eventSource = new EventSource('/stream');
+        eventSource = new EventSource('/stream'); // Conexión al endpoint SSE
 
         eventSource.onmessage = function(event) {
             try {
@@ -40,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data && data.time) {
                     console.log('Ping recibido del servidor:', data.time);
                 } else if (data && data.mensaje) {
-                    // Si es un mensaje de alerta, muéstralo
+                    // Si es un mensaje de alerta, muéstralo al usuario
                     mostrarAlertaSSE(data.mensaje);
                 }
             } catch (error) {
@@ -48,46 +51,47 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
-        // Escuchar eventos específicos (si tu backend los envía así)
+        // Escuchar eventos específicos (si tu backend los envía con un 'event' type)
         eventSource.addEventListener('ping', function(event) {
             console.log('Evento "ping" recibido del servidor.');
         });
 
         eventSource.onerror = function(error) {
             console.error('Error en la conexión SSE:', error);
-            // Considera si quieres mostrar esta alerta al usuario, o solo en consola.
+            // Puedes decidir si mostrar esta alerta al usuario o solo en consola
             // mostrarAlertaSSE('Error en la conexión de alertas en tiempo real.');
         };
     } else {
+        // Muestra una alerta si el navegador no soporta SSE
         mostrarAlertaSSE('Tu navegador no soporta Server-Sent Events. Las alertas en tiempo real no estarán disponibles.');
     }
 
     // --- Manejo del Formulario de Búsqueda ---
     buscadorForm.addEventListener('submit', function(event) {
-        event.preventDefault();
+        event.preventDefault(); // Evita el envío del formulario por defecto
 
-        const nombreProducto = document.getElementById('nombre_producto').value.trim(); // .trim() para limpiar espacios
+        const nombreProducto = document.getElementById('nombre_producto').value.trim(); // .trim() para limpiar espacios en blanco
         if (!nombreProducto) {
-            resultadosDiv.innerHTML = '<p class="text-danger">Por favor, ingresa el nombre de un producto.</p>';
+            resultadosDiv.innerHTML = '<p class="text-danger">Por favor, ingresa el nombre de un producto para buscar.</p>';
             compraDetalleDiv.innerHTML = '';
             totalCompraDiv.innerHTML = '';
-            return;
+            return; // Sale de la función si el campo está vacío
         }
 
         resultadosDiv.innerHTML = `<p>Buscando información para el producto: <strong>${nombreProducto}</strong>...</p>`;
-        compraDetalleDiv.innerHTML = '';
-        totalCompraDiv.innerHTML = '';
+        compraDetalleDiv.innerHTML = ''; // Limpia el detalle de compra anterior
+        totalCompraDiv.innerHTML = ''; // Limpia el total de compra anterior
 
         // Realiza la primera llamada para buscar productos
         fetch(`/buscar_producto?nombre=${encodeURIComponent(nombreProducto)}`)
             .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) { // Si la respuesta HTTP no es exitosa
+                    throw new Error(`Error HTTP! estado: ${response.status}`);
                 }
-                return response.json();
+                return response.json(); // Parsea la respuesta como JSON
             })
             .then(data => {
-                // Realiza la segunda llamada para obtener el valor del dólar
+                // Una vez que se tienen los datos del producto, se realiza la segunda llamada para obtener el valor del dólar
                 return fetch('https://mindicador.cl/api/dolar')
                     .then(response => {
                         if (!response.ok) {
@@ -98,9 +102,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .then(dolarData => {
                         let dolarRate = null;
+                        // Extrae el valor del dólar si la estructura es la esperada
                         if (dolarData && dolarData.serie && dolarData.serie.length > 0 && dolarData.serie[0].valor) {
                             dolarRate = dolarData.serie[0].valor;
-                        } else if (dolarData !== null) { // Solo si la primera parte de la cadena fetch no devolvió null
+                        } else if (dolarData !== null) {
                             console.warn('Advertencia: Formato de respuesta del dólar desde Mindicador inesperado:', dolarData);
                         }
                         // Pasa los datos del producto y el tipo de cambio del dólar a la función que renderiza los resultados
@@ -126,24 +131,34 @@ document.addEventListener('DOMContentLoaded', function() {
         resultadosDiv.innerHTML = ''; // Limpiar resultados anteriores
 
         if (resultados && resultados.length > 0) {
-            resultadosDiv.innerHTML += `<h3>Resultados para: ${nombreProductoBuscado}</h3>`;
+            resultadosDiv.innerHTML += `<h3>Resultados...</h3>`;
 
-            // Agrupar productos por su ID para mostrar la imagen una vez por producto
+            // Agrupar productos por su ID para mostrar la imagen y el nombre una vez por producto
             const productosAgrupados = {};
             resultados.forEach(resultado => {
                 if (!productosAgrupados[resultado.producto_id]) {
                     productosAgrupados[resultado.producto_id] = {
-                        producto_nombre: resultado.producto_nombre, // Renombrado a producto_nombre
-                        imagen: resultado.imagen, // ¡Nueva propiedad!
-                        sucursales: []
+                        producto_nombre: resultado.producto_nombre,
+                        imagen: resultado.imagen,
+                        sucursales: [],
+                        // Nuevo: Almacenar precios para encontrar el mínimo
+                        precios_clp: [] 
                     };
                 }
                 productosAgrupados[resultado.producto_id].sucursales.push(resultado);
+                productosAgrupados[resultado.producto_id].precios_clp.push(resultado.precio); // Guardar todos los precios
             });
 
             for (const productoId in productosAgrupados) {
                 const productoInfo = productosAgrupados[productoId];
                 const sucursales = productoInfo.sucursales;
+
+                // Encontrar el precio más bajo entre todas las sucursales para este producto
+                const precioMasBajoClp = Math.min(...productoInfo.precios_clp);
+                let precioMasBajoUsd = null;
+                if (dolarRate !== null) {
+                    precioMasBajoUsd = precioMasBajoClp / dolarRate;
+                }
 
                 // Ordenar las sucursales para que "Casa Matriz" aparezca primero
                 sucursales.sort((a, b) => {
@@ -156,46 +171,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 productoCard.classList.add('card', 'mb-3');
                 productoCard.innerHTML = `
                     <div class="card-body">
-                        <div class="row g-0">
-                            <div class="col-md-4">
-                                <img src="${productoInfo.imagen || 'https://via.placeholder.com/150'}" class="img-fluid rounded-start" alt="Imagen de ${productoInfo.producto_nombre}" style="max-width: 150px; max-height: 150px; object-fit: contain;">
-                            </div>
-                            <div class="col-md-8">
-                                <h5 class="card-title">${productoInfo.producto_nombre}</h5>
+                        <div class="row g-0 align-items-center"> <div class="col-md-3 d-flex justify-content-center"> <img src="${productoInfo.imagen || 'https://via.placeholder.com/150'}" class="img-fluid rounded-start" alt="Imagen de ${productoInfo.producto_nombre}" style="max-width: 120px; max-height: 120px; object-fit: contain;"> </div>
+                            <div class="col-md-9"> <h5 class="card-title mb-1">${productoInfo.producto_nombre}</h5>
+                                <p class="card-text">
+                                    <small class="text-muted">Desde </small>
+                                    <strong class="text-success fs-5">$${precioMasBajoClp.toLocaleString('es-CL')} CLP</strong>
+                                    ${precioMasBajoUsd !== null ? `<br><small class="text-info">${precioMasBajoUsd.toFixed(2)} USD</small>` : ''}
+                                </p>
+                                <hr> <h6>Sucursales y Stock:</h6>
                                 <div class="list-group list-group-flush">
                                     ${sucursales.map(resultado => {
                                         let precioUsd = null;
                                         if (dolarRate !== null) {
-                                            precioUsd = resultado.precio / dolarRate; // Precio ahora viene del producto
+                                            precioUsd = resultado.precio / dolarRate;
                                         }
-                                        const radioId = `sucursal-${resultado.sucursal_id}-${resultado.producto_id}`; // ID más único
+                                        const radioId = `sucursal-${resultado.sucursal_id}-${resultado.producto_id}`; // ID único para el radio button
                                         const sinStock = resultado.stock_disponible === 0;
 
+                                        // Muestra una alerta si el producto está sin stock en una sucursal específica
                                         if (sinStock) {
                                             mostrarAlertaSSE(`¡Atención! El producto "${resultado.producto_nombre}" en la sucursal "${resultado.sucursal_nombre}" está sin stock.`);
                                         }
 
                                         return `
-                                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div class="list-group-item d-flex justify-content-between align-items-center ${sinStock ? 'bg-light text-muted' : ''}">
                                                 <div>
-                                                    <strong>Sucursal:</strong> ${resultado.sucursal_nombre} 
-                                                    <span class="text-info">(${resultado.stock_disponible} unidades)</span><br>
-                                                    <strong>Precio:</strong> <span class="text-success">$${resultado.precio.toLocaleString('es-CL')} CLP</span>
-                                                    ${precioUsd !== null ? `<br><span class="text-muted">~${precioUsd.toFixed(2)} USD</span>` : ''}
+                                                    <strong>${resultado.sucursal_nombre}:</strong> 
+                                                    <span class="text-info">${resultado.stock_disponible} unidades</span><br>
+                                               
                                                 </div>
                                                 <div>
                                                     <input type="radio" name="producto-selection-${productoId}" 
-                                                           value="${radioId}" 
-                                                           data-precio-clp="${resultado.precio}" 
-                                                           data-precio-usd="${precioUsd !== null ? precioUsd.toFixed(2) : ''}" 
-                                                           data-stock="${resultado.stock_disponible}" 
-                                                           data-sucursal-id="${resultado.sucursal_id}" 
-                                                           data-producto-id="${resultado.producto_id}" 
-                                                           data-producto-nombre="${resultado.producto_nombre}" 
-                                                           data-sucursal-nombre="${resultado.sucursal_nombre}" 
-                                                           ${sinStock ? 'disabled' : ''} 
-                                                           id="${radioId}"> 
-                                                    <label for="${radioId}"> ${sinStock ? '<span class="text-danger">Sin Stock</span>' : 'Seleccionar'}</label>
+                                                            value="${radioId}" 
+                                                            data-precio-clp="${resultado.precio}" 
+                                                            data-precio-usd="${precioUsd !== null ? precioUsd.toFixed(2) : ''}" 
+                                                            data-stock="${resultado.stock_disponible}" 
+                                                            data-sucursal-id="${resultado.sucursal_id}" 
+                                                            data-producto-id="${resultado.producto_id}" 
+                                                            data-producto-nombre="${resultado.producto_nombre}" 
+                                                            data-sucursal-nombre="${resultado.sucursal_nombre}" 
+                                                            ${sinStock ? 'disabled' : ''} 
+                                                            id="${radioId}" class="form-check-input"> 
+                                                    <label for="${radioId}" class="form-check-label ms-2"> ${sinStock ? '<span class="text-danger">Sin Stock</span>' : 'Seleccionar'}</label>
                                                 </div>
                                             </div>
                                         `;
@@ -208,10 +225,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 resultadosDiv.appendChild(productoCard);
             }
 
-            // --- Event listener para la selección de producto/sucursal ---
+            // --- Event listener delegado para la selección de producto/sucursal ---
+            // Usa 'change' en resultadosDiv para capturar eventos de radio buttons
             resultadosDiv.addEventListener('change', function(event) {
+                // Verifica si el elemento que disparó el evento es un radio button y pertenece a la selección de producto
                 if (event.target.type === 'radio' && event.target.name.startsWith('producto-selection-')) {
                     const selectedRadio = event.target;
+                    // Almacena los datos del producto y sucursal seleccionados
                     productoSeleccionado = {
                         precio_clp: parseFloat(selectedRadio.dataset.precioClp),
                         precio_usd: selectedRadio.dataset.precioUsd ? parseFloat(selectedRadio.dataset.precioUsd) : null,
@@ -221,28 +241,27 @@ document.addEventListener('DOMContentLoaded', function() {
                         productoNombre: selectedRadio.dataset.productoNombre,
                         sucursalNombre: selectedRadio.dataset.sucursalNombre
                     };
-                    mostrarDetalleCompra(productoSeleccionado, dolarRate);
+                    mostrarDetalleCompra(productoSeleccionado, dolarRate); // Muestra el detalle de la compra
                 }
             });
 
         } else {
-            resultadosDiv.innerHTML = `<p>No se encontraron resultados para el producto: <strong>${nombreProductoBuscado}</strong>.</p>`;
+            // Si no se encuentran resultados
+            resultadosDiv.innerHTML = `<p>No se encontraron resultados para el producto: <strong>${nombreProductoBuscado}</strong>. Intenta con otro nombre.</p>`;
         }
     }
 
-    // --- Función para mostrar el detalle de la compra y botones ---
+    // --- Función para mostrar el detalle de la compra y botones de acción ---
     function mostrarDetalleCompra(producto, dolarRate) {
         if (producto) {
             const precioUsdCompra = dolarRate !== null ? producto.precio_clp / dolarRate : null;
 
             compraDetalleDiv.innerHTML = `
                 <div class="mt-4 p-3 border rounded bg-light">
-                    <h4>Detalle de Compra</h4>
-                    <p><strong>Producto:</strong> ${producto.productoNombre}</p>
-                    <p><strong>Sucursal:</strong> ${producto.sucursalNombre}</p>
-                    <p><strong>Stock Disponible:</strong> ${producto.stock} unidades</p>
-                    <p><strong>Precio Unitario:</strong> $${producto.precio_clp.toLocaleString('es-CL')} CLP 
-                    ${precioUsdCompra !== null ? `(~${precioUsdCompra.toFixed(2)} USD)` : ''}</p>
+                     <p><strong>Sucursal Seleccionada:</strong> ${producto.sucursalNombre}</p>
+                    <p><strong>Stock:</strong> ${producto.stock} unidades</p>
+                    <p><strong>Precio Unitario:</strong> <span class="text-success">$${producto.precio_clp.toLocaleString('es-CL')} CLP</span></p>
+                    <p><strong>Precio Dolar:</strong>${precioUsdCompra !== null ? `$<span class="text-info">${precioUsdCompra.toFixed(2)} USD</span>` : ''}</p>
                     
                     <div class="mb-3">
                         <label for="cantidad-compra" class="form-label">Cantidad a comprar:</label>
@@ -272,10 +291,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // --- Event Listener para Calcular Total ---
             calcularTotalBtnGeneral.addEventListener('click', function() {
                 const cantidad = parseInt(cantidadInputGeneral.value, 10);
-                // Validar cantidad
+                // Validar la cantidad ingresada
                 if (isNaN(cantidad) || cantidad <= 0 || cantidad > producto.stock) {
                     totalCompraDiv.innerHTML = '<p class="text-danger">Por favor, ingrese una cantidad válida y dentro del stock disponible.</p>';
-                    realizarCompraBtnGeneral.style.display = 'none';
+                    realizarCompraBtnGeneral.style.display = 'none'; // Oculta el botón de compra si la cantidad no es válida
                     return;
                 }
 
@@ -284,7 +303,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 totalClp = Math.round(totalClp); // Redondear a número entero para CLP
 
                 let totalUsdHtml = '';
-                if (dolarRate !== null) {
+                if (dolarRate !== null) { // Solo calcula y muestra USD si el tipo de cambio está disponible
                     const precioUsdUnitario = parseFloat(this.dataset.precioUsd);
                     const totalUsd = precioUsdUnitario * cantidad;
                     totalUsdHtml = `<br><strong>Total en Dólar:</strong> ${totalUsd.toFixed(2)} USD`;
@@ -296,8 +315,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p class="fs-4">$${totalClp.toLocaleString('es-CL')} CLP ${totalUsdHtml}</p>
                     </div>
                 `;
-                realizarCompraBtnGeneral.style.display = 'inline-block';
-                realizarCompraBtnGeneral.dataset.cantidad = cantidad;
+                realizarCompraBtnGeneral.style.display = 'inline-block'; // Muestra el botón de realizar compra
+                realizarCompraBtnGeneral.dataset.cantidad = cantidad; // Almacena la cantidad para la compra
                 realizarCompraBtnGeneral.dataset.precioClp = precioClpUnitario; // Almacena el precio unitario en CLP
                 realizarCompraBtnGeneral.dataset.precioUsd = precioUsdCompra; // Almacena el precio unitario en USD
             });
@@ -312,11 +331,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const precioClpUnitario = this.dataset.precioClp;
                 const precioUsdUnitario = this.dataset.precioUsd;
 
-                // Redirigir a la página de pago con los parámetros correctos
+                // Redirigir a la página de pago con los parámetros de la compra
                 window.location.href = `/pagar.html?sucursal_id=${sucursalId}&producto_id=${productoId}&cantidad=${cantidadComprada}&producto_nombre=${encodeURIComponent(productoNombre)}&sucursal_nombre=${encodeURIComponent(sucursalNombre)}&precio_clp_unitario=${precioClpUnitario}&precio_usd_unitario=${precioUsdUnitario}`;
             });
 
         } else {
+            // Limpiar si no hay producto seleccionado
             compraDetalleDiv.innerHTML = '';
             totalCompraDiv.innerHTML = '';
         }

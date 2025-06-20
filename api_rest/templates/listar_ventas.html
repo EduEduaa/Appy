@@ -96,12 +96,12 @@
                     <td>{{ venta.id_venta }}</td>
                     <td>{{ venta.fecha }}</td>
                     <td>{{ venta.sucursal_nombre }}</td>
-                    <td>${{ "%.2f"|format(venta.total_venta) }}</td>
+                    <td>${{ venta.total_venta | int | tojson }}</td>
                     <td>
                         <div class="sale-details">
                             {% for detalle in venta.detalles %}
                                 <div class="sale-detail-item">
-                                    <span>{{ detalle.producto_nombre }} (x{{ detalle.cantidad }}) - ${{ "%.2f"|format(detalle.precio_unitario) }} c/u</span>
+                                    <span>{{ detalle.producto_nombre }} (x{{ detalle.cantidad }}) - ${{ (detalle.precio_unitario| int | tojson) }} c/u</span>
                                 </div>
                             {% endfor %}
                         </div>

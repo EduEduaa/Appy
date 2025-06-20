@@ -8,14 +8,14 @@ service ProductMaintainer {
   rpc UpdateProduct(UpdateProductRequest) returns (Product);
   rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
   rpc UploadProductImage(stream UploadProductImageRequest) returns (UploadProductImageResponse);
-  rpc GetAllProducts(GetAllProductsRequest) returns (ProductList); // Nuevo método para obtener todos los productos
+  rpc GetAllProducts(GetAllProductsRequest) returns (ProductList);
 }
 
 message Product {
   int32 id = 1;
   string nombre = 2;
   float precio = 3;
-  string imagen = 4; // URL o ruta de la imagen
+  string imagen = 4; // URL o la ruta de la imagen
 }
 
 message GetProductRequest {
@@ -46,18 +46,18 @@ message DeleteProductResponse {
 
 message UploadProductImageRequest {
   int32 product_id = 1;
-  bytes chunk_data = 2; // Datos binarios del chunk de la imagen
+  bytes chunk_data = 2; // Datos binarios de la imagen
   string filename = 3; // Nombre de archivo original para la extensión
 }
 
 message UploadProductImageResponse {
   bool success = 1;
-  string image_url = 2; // URL donde se almacena la imagen
+  string image_url = 2; 
   string message = 3;
 }
 
 message GetAllProductsRequest {
-  // No necesita campos, es para pedir todos los productos
+  
 }
 
 message ProductList {
