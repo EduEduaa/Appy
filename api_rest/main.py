@@ -8,7 +8,7 @@ from functools import wraps
 import grpc
 from concurrent import futures
 import os
-import shutil # Para guardar archivos
+import shutil 
 
 # Importar stubs gRPC generados
 # Asegúrate de que tu carpeta grpc_stubs contiene un archivo __init__.py vacío
@@ -222,6 +222,14 @@ def home_page(): # Renombrada de 'index' para evitar conflicto
 @app.route('/mantenedor')
 def product_maintainer():
     return render_template('mantenedor_productos.html')
+
+@app.route('/mantenedor/agregar')
+def add_product_page():
+    return render_template('agregar_producto.html')
+
+@app.route('/mantenedor/editar/<int:product_id>')
+def edit_product_page(product_id):
+    return render_template('editar_producto.html', product_id=product_id)
 
 @app.route('/pagar.html')
 def pagar_page():
