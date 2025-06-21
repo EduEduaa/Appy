@@ -185,12 +185,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                         if (dolarRate !== null) {
                                             precioUsd = resultado.precio / dolarRate;
                                         }
-                                        const radioId = `sucursal-${resultado.sucursal_id}-${resultado.producto_id}`; // ID único para el radio button
+                                        const radioId = `sucursal-${resultado.sucursal_id}-${resultado.producto_id}`; //para el radio button
                                         const sinStock = resultado.stock_disponible === 0;
 
                                         // Muestra una alerta si el producto está sin stock en una sucursal específica
                                         if (sinStock) {
-                                            mostrarAlertaSSE(`¡Atención! El producto "${resultado.producto_nombre}" en la sucursal "${resultado.sucursal_nombre}" está sin stock.`);
+                                            mostrarAlertaSSE(`¡Atención! en la sucursal "${resultado.sucursal_nombre}" está sin stock`);
                                         }
 
                                         return `

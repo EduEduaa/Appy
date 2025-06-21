@@ -117,9 +117,6 @@
                     })
                     .then(response => {
                         if (response.ok) {
-                            // Payment successful
-                            showAlert('¡Pago realizado con éxito! Redirigiendo...', 'success');
-                            // Wait a bit before redirecting for the user to see the success message
                             setTimeout(() => {
                                 window.location.href = `/gracias.html?producto_nombre=${encodeURIComponent(productoNombre)}&cantidad=${cantidad}&total=${totalClp}`;
                             }, 1500); // Redirect after 1.5 seconds
