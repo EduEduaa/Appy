@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // --- Event listener delegado para la selección de producto/sucursal ---
             // Usa 'change' en resultadosDiv para capturar eventos de radio buttons
             resultadosDiv.addEventListener('change', function(event) {
-                // Verifica si el elemento que disparó el evento es un radio button y pertenece a la selección de producto
+             
                 if (event.target.type === 'radio' && event.target.name.startsWith('producto-selection-')) {
                     const selectedRadio = event.target;
                     // Almacena los datos del producto y sucursal seleccionados
