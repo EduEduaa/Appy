@@ -368,9 +368,7 @@ sse_clients = []
 def sse_event_generator():
     """Generador que envía 'ping' a los clientes SSE para mantener la conexión."""
     while True:
-        # Esto solo envía un 'ping' periódico.
-        # Para eventos dinámicos (e.g., stock bajo), necesitarías un mecanismo de cola de mensajes
-        # o una librería SSE más robusta (como Flask-SSE) para empujar mensajes a los clientes conectados.
+            # o una librería SSE más robusta (como Flask-SSE) para empujar mensajes a los clientes conectados.
         time.sleep(10) # Intervalo para enviar pings
         yield f"event: ping\ndata: {json.dumps({'time': datetime.now().isoformat()})}\n\n"
 
@@ -484,8 +482,6 @@ def eliminar_sucursal(sucursal_id):
         return jsonify({'error': f'Error al eliminar sucursal: {str(e)}'}), 500
 
 # --- CRUD para Productos (AJUSTADO) ---
-
-
 
 
 @app.route('/productos/<int:producto_id>', methods=['DELETE'])
