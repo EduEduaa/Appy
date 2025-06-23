@@ -522,8 +522,7 @@ def crear_stock(sucursal_id, producto_id):
     if not request.get_json() or 'cantidad' not in request.get_json():
         return jsonify({'error': 'Solicitud inválida. Falta cantidad'}), 400
     
-    # Asegúrate de que el producto y la sucursal existan
-    # Usar db.session.get() para la API de SQLAlchemy 2.0
+   
     sucursal = db.session.get(Sucursal, sucursal_id)
     producto = db.session.get(Producto, producto_id)
     if not sucursal:
@@ -561,7 +560,7 @@ def crear_stock_bulk():
             producto_id = item_data['producto_id']
             cantidad = item_data['cantidad']
 
-            # Usar db.session.get() para la API de SQLAlchemy 2.0
+         
             sucursal = db.session.get(Sucursal, sucursal_id)
             producto = db.session.get(Producto, producto_id)
             if not sucursal or not producto:
@@ -637,7 +636,7 @@ def listar_ventas():
     for venta in ventas_db:
         venta_id = venta.id
         if venta_id not in ventas_agrupadas:
-            # Usar db.session.get() para la API de SQLAlchemy 2.0
+            
             sucursal = db.session.get(Sucursal, venta.sucursal_id)
             ventas_agrupadas[venta_id] = {
                 'id_venta': venta.id,
@@ -648,7 +647,7 @@ def listar_ventas():
             }
         
         for detalle in venta.detalles:
-            # Usar db.session.get() para la API de SQLAlchemy 2.0
+            
             producto = db.session.get(Producto, detalle.producto_id)
             ventas_agrupadas[venta_id]['detalles'].append({
                 'producto_nombre': producto.nombre if producto else 'Producto desconocido',
@@ -678,7 +677,7 @@ def registrar_venta():
     detalles_venta = []
 
     try:
-        # Usar db.session.get() para la API de SQLAlchemy 2.0
+        
         sucursal_existente = db.session.get(Sucursal, sucursal_id)
         if not sucursal_existente:
             return jsonify({'error': f'Sucursal con ID {sucursal_id} no encontrada'}), 404
@@ -691,7 +690,7 @@ def registrar_venta():
                 return jsonify({'error': 'Producto, cantidad o formato de cantidad inválida en los detalles de la venta'}), 400
 
             # Obtener el producto para su precio e información
-            # Usar db.session.get() para la API de SQLAlchemy 2.0
+         
             producto = db.session.get(Producto, producto_id)
             if not producto:
                 return jsonify({'error': f'Producto con ID {producto_id} no encontrado'}), 404
@@ -734,10 +733,10 @@ def registrar_venta():
         }), 201
 
     except SQLAlchemyError as e:
-        db.session.rollback() # Revertir cambios en caso de cualquier error
+        db.session.rollback() 
         return jsonify({'error': f'Error en la base de datos al registrar la venta: {str(e)}'}), 500
     except Exception as e:
-        db.session.rollback() # Revertir cambios por otros errores no específicos de DB
+        db.session.rollback() 
         return jsonify({'error': f'Error inesperado al registrar la venta: {str(e)}'}), 500
 
 
