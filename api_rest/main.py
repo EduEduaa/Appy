@@ -11,10 +11,9 @@ import os
 import shutil 
 
 # Importar stubs gRPC generados
-# Asegúrate de que tu carpeta grpc_stubs contiene un archivo __init__.py vacío
 # Y que las importaciones dentro de mantenedor_productos_pb2_grpc.py sean relativas (from . import mantenedor_productos_pb2)
-from grpc_stubs import mantenedor_productos_pb2
-from grpc_stubs import mantenedor_productos_pb2_grpc
+from grpc_stubs import mantenedor_productos_pb2,mantenedor_productos_pb2_grpc
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/tienda'
@@ -35,7 +34,7 @@ def require_api_token(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = request.headers.get('Authorization')
-        # Espera un formato "Bearer mi_api_key_segura_abc123"
+       
         if not token or not token.startswith("Bearer "):
             abort(401, description="No autorizado. Formato de token inválido o faltante.")
         
@@ -51,7 +50,7 @@ def require_api_token(f):
 class ProductMaintainerServicer(mantenedor_productos_pb2_grpc.ProductMaintainerServicer):
     def GetProduct(self, request, context):
         with app.app_context():
-            # Usar db.session.get() para la API de SQLAlchemy 2.0
+            
             product = db.session.get(Producto, request.product_id)
             if not product:
                 context.set_code(grpc.StatusCode.NOT_FOUND)
@@ -101,7 +100,7 @@ class ProductMaintainerServicer(mantenedor_productos_pb2_grpc.ProductMaintainerS
 
     def UpdateProduct(self, request, context):
         with app.app_context():
-            # Usar db.session.get() para la API de SQLAlchemy 2.0
+           
             product = db.session.get(Producto, request.id)
             if not product:
                 context.set_code(grpc.StatusCode.NOT_FOUND)
@@ -128,7 +127,7 @@ class ProductMaintainerServicer(mantenedor_productos_pb2_grpc.ProductMaintainerS
 
     def DeleteProduct(self, request, context):
         with app.app_context():
-            # Usar db.session.get() para la API de SQLAlchemy 2.0
+            
             product = db.session.get(Producto, request.product_id)
             if not product:
                 context.set_code(grpc.StatusCode.NOT_FOUND)
@@ -171,7 +170,7 @@ class ProductMaintainerServicer(mantenedor_productos_pb2_grpc.ProductMaintainerS
                 context.set_details("Producto no encontrado para la carga de imagen.")
                 return mantenedor_productos_pb2.UploadProductImageResponse(success=False, message="Producto no encontrado")
 
-            # Generar un nombre de archivo único para evitar colisiones
+            
             base, ext = os.path.splitext(filename)
             unique_filename = f"{product_id}_{int(time.time())}{ext}"
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
@@ -201,12 +200,13 @@ class ProductMaintainerServicer(mantenedor_productos_pb2_grpc.ProductMaintainerS
                 context.set_details(f"Error de base de datos al actualizar la ruta de la imagen: {str(e)}")
                 return mantenedor_productos_pb2.UploadProductImageResponse(success=False, message=f"Error de base de datos: {str(e)}")
 
+# grpc server con local
+
 def serve_grpc():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     mantenedor_productos_pb2_grpc.add_ProductMaintainerServicer_to_server(
         ProductMaintainerServicer(), server
     )
-    # **CORRECCIÓN CLAVE: Cambiar '[::]' a '0.0.0.0' para evitar problemas de binding IPv6**
     server.add_insecure_port('0.0.0.0:50051') 
     server.start()
     print("Servidor gRPC iniciado en el puerto 50051")
@@ -214,9 +214,8 @@ def serve_grpc():
 
 # --- Rutas de Flask ---
 
-# **CORRECCIÓN CLAVE: Renombrar la función 'index' duplicada a 'home_page'**
 @app.route('/')
-def home_page(): # Renombrada de 'index' para evitar conflicto
+def home_page(): 
     return render_template('index.html')
 
 @app.route('/mantenedor')
@@ -240,7 +239,7 @@ def gracias_page():
     return render_template('gracias.html')
 
 
-# Endpoint de la API de Flask para obtener todos los productos (usado por el frontend)
+
 @app.route('/api/products', methods=['GET'])
 def get_products_api():
     with grpc.insecure_channel('localhost:50051') as channel:
@@ -260,7 +259,7 @@ def get_products_api():
             abort(e.code().value[0], description=e.details())
 
 
-# API de Flask para manejar llamadas gRPC desde el frontend (actuando como pasarela)
+
 @app.route('/api/grpc/product/<int:product_id>', methods=['GET'])
 def grpc_get_product(product_id):
     with grpc.insecure_channel('localhost:50051') as channel:
@@ -389,11 +388,11 @@ def buscar_producto():
         return jsonify({'error': 'Por favor, proporciona un nombre de producto'}), 400
 
     resultados = []
-    # Busca productos por nombre
+    
     productos_encontrados = Producto.query.filter(db.func.lower(Producto.nombre) == nombre_producto.lower()).all()
 
     for producto in productos_encontrados:
-        # Busca el stock de este producto en todas las sucursales
+     
         stock_items = Stock.query.filter_by(producto_id=producto.id).all()
         for item_stock in stock_items:
             # Usar db.session.get() para la API de SQLAlchemy 2.0
@@ -409,12 +408,7 @@ def buscar_producto():
                     'sucursal_nombre': sucursal.nombre
                 }
                 resultados.append(resultado)
-
-            
-                # Para un sistema de notificación en tiempo real, deberías usar:
-                # 1. Una librería como Flask-SSE (que se integra con Redis u otra cola de mensajes).
-                # 2. Un sistema de cola de mensajes (RabbitMQ, Kafka) con un microservicio de Websockets/SSE.
-       
+    
                 if item_stock.cantidad == 0:
                     print(f"ALERTA STOCK 0: ¡El producto {producto.nombre} en la sucursal {sucursal.nombre} tiene stock 0!")
     return jsonify({'resultados': resultados})
@@ -428,7 +422,7 @@ def obtener_sucursales():
 
 @app.route('/sucursales/<int:sucursal_id>', methods=['GET'])
 def obtener_sucursal(sucursal_id):
-    # Usar db.session.get() para la API de SQLAlchemy 2.0
+  
     sucursal = db.session.get(Sucursal, sucursal_id)
     if not sucursal:
         abort(404, description="Sucursal no encontrada")
@@ -458,7 +452,7 @@ def crear_sucursal():
 
 @app.route('/sucursales/<int:sucursal_id>', methods=['PUT'])
 def actualizar_sucursal(sucursal_id):
-    # Usar db.session.get() para la API de SQLAlchemy 2.0
+   
     sucursal = db.session.get(Sucursal, sucursal_id)
     if not sucursal:
         abort(404, description="Sucursal no encontrada")
@@ -477,7 +471,7 @@ def actualizar_sucursal(sucursal_id):
 
 @app.route('/sucursales/<int:sucursal_id>', methods=['DELETE'])
 def eliminar_sucursal(sucursal_id):
-    # Usar db.session.get() para la API de SQLAlchemy 2.0
+    
     sucursal = db.session.get(Sucursal, sucursal_id)
     if not sucursal:
         abort(404, description="Sucursal no encontrada")
@@ -491,78 +485,7 @@ def eliminar_sucursal(sucursal_id):
 
 # --- CRUD para Productos (AJUSTADO) ---
 
-@app.route('/productos', methods=['GET'])
-def obtener_productos():
-    productos = Producto.query.all()
-    return jsonify({'productos': [{'id': p.id, 'nombre': p.nombre, 'precio': p.precio, 'imagen': p.imagen} for p in productos]})
 
-@app.route('/productos/<int:producto_id>', methods=['GET'])
-def obtener_producto(producto_id):
-    # Usar db.session.get() para la API de SQLAlchemy 2.0
-    producto = db.session.get(Producto, producto_id)
-    if not producto:
-        abort(404, description="Producto no encontrado")
-    return jsonify({'producto': {'id': producto.id, 'nombre': producto.nombre, 'precio': producto.precio, 'imagen': producto.imagen}})
-
-@app.route('/productos', methods=['POST'])
-def crear_producto():
-    data = request.get_json()
-    if not isinstance(data, list):
-        return jsonify({'error': 'Por favor, envía una lista de productos'}), 400
-    nuevos_productos = []
-    try:
-        for producto_data in data:
-            if not all(key in producto_data for key in ['nombre', 'precio', 'imagen']):
-                return jsonify({'error': 'Solicitud inválida. Faltan nombre, precio o imagen en un producto'}), 400
-            
-            nuevo_producto = Producto(
-                nombre=producto_data['nombre'],
-                precio=producto_data['precio'],
-                imagen=producto_data['imagen']
-            )
-            db.session.add(nuevo_producto)
-            db.session.flush() # Para obtener el ID antes del commit final
-            nuevos_productos.append({
-                'id': nuevo_producto.id,
-                'nombre': nuevo_producto.nombre,
-                'precio': nuevo_producto.precio,
-                'imagen': nuevo_producto.imagen
-            })
-        db.session.commit()
-        return jsonify({'productos_creados': nuevos_productos}), 201
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return jsonify({'error': f'Error al crear productos: {str(e)}'}), 500
-
-
-@app.route('/productos/<int:producto_id>', methods=['PUT'])
-def actualizar_producto(producto_id):
-    # Usar db.session.get() para la API de SQLAlchemy 2.0
-    producto = db.session.get(Producto, producto_id)
-    if not producto:
-        abort(404, description="Producto no encontrado")
-    data = request.get_json()
-    if not data:
-        return jsonify({'error': 'Solicitud inválida'}), 400
-    
-    producto.nombre = data.get('nombre', producto.nombre)
-    producto.precio = data.get('precio', producto.precio)
-    producto.imagen = data.get('imagen', producto.imagen)
-
-    try:
-        db.session.commit()
-        return jsonify({
-            'mensaje': 'Producto actualizado exitosamente',
-            'producto': {
-                'id': producto.id,
-                'nombre': producto.nombre,
-                'precio': producto.precio,
-                'imagen': producto.imagen
-            }
-        })
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return jsonify({'error': f'Error al actualizar producto: {str(e)}'}), 500
 
 
 @app.route('/productos/<int:producto_id>', methods=['DELETE'])

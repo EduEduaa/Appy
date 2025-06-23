@@ -17,7 +17,7 @@ class Producto(db.Model):
     precio = db.Column(db.Float, nullable=False)
     imagen = db.Column(db.String(255), nullable=True) 
     stocks = db.relationship('Stock', backref='producto', lazy=True, cascade='all, delete-orphan')
-    detalles_venta = db.relationship('DetalleVenta', backref='producto', lazy=True)
+    detalles_venta = db.relationship('DetalleVenta', backref='producto', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"<Producto {self.nombre}>"
