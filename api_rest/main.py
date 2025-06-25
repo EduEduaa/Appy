@@ -11,7 +11,6 @@ import os
 import shutil 
 
 # Importar stubs gRPC generados
-# Y que las importaciones dentro de mantenedor_productos_pb2_grpc.py sean relativas (from . import mantenedor_productos_pb2)
 from grpc_stubs import mantenedor_productos_pb2,mantenedor_productos_pb2_grpc
 
 
@@ -45,172 +44,6 @@ def require_api_token(f):
             abort(401, description="No autorizado. Token inválido.")
         return f(*args, **kwargs)
     return decorated_function
-
-# --- Implementación del Servidor gRPC ---
-class ProductMaintainerServicer(mantenedor_productos_pb2_grpc.ProductMaintainerServicer):
-    def GetProduct(self, request, context):
-        with app.app_context():
-            
-            product = db.session.get(Producto, request.product_id)
-            if not product:
-                context.set_code(grpc.StatusCode.NOT_FOUND)
-                context.set_details("Producto no encontrado")
-                return mantenedor_productos_pb2.Product()
-            return mantenedor_productos_pb2.Product(
-                id=product.id,
-                nombre=product.nombre,
-                precio=product.precio,
-                imagen=product.imagen if product.imagen else ""
-            )
-
-    def GetAllProducts(self, request, context):
-        with app.app_context():
-            products = Producto.query.all()
-            product_list = []
-            for product in products:
-                product_list.append(mantenedor_productos_pb2.Product(
-                    id=product.id,
-                    nombre=product.nombre,
-                    precio=product.precio,
-                    imagen=product.imagen if product.imagen else ""
-                ))
-            return mantenedor_productos_pb2.ProductList(products=product_list)
-
-    def CreateProduct(self, request, context):
-        with app.app_context():
-            new_product = Producto(
-                nombre=request.nombre,
-                precio=request.precio,
-                imagen=request.imagen if request.imagen else None
-            )
-            db.session.add(new_product)
-            try:
-                db.session.commit()
-                return mantenedor_productos_pb2.Product(
-                    id=new_product.id,
-                    nombre=new_product.nombre,
-                    precio=new_product.precio,
-                    imagen=new_product.imagen if new_product.imagen else ""
-                )
-            except SQLAlchemyError as e:
-                db.session.rollback()
-                context.set_code(grpc.StatusCode.INTERNAL)
-                context.set_details(f"Error de base de datos: {str(e)}")
-                return mantenedor_productos_pb2.Product()
-
-    def UpdateProduct(self, request, context):
-        with app.app_context():
-           
-            product = db.session.get(Producto, request.id)
-            if not product:
-                context.set_code(grpc.StatusCode.NOT_FOUND)
-                context.set_details("Producto no encontrado")
-                return mantenedor_productos_pb2.Product()
-
-            product.nombre = request.nombre
-            product.precio = request.precio
-            product.imagen = request.imagen if request.imagen else None
-
-            try:
-                db.session.commit()
-                return mantenedor_productos_pb2.Product(
-                    id=product.id,
-                    nombre=product.nombre,
-                    precio=product.precio,
-                    imagen=product.imagen if product.imagen else ""
-                )
-            except SQLAlchemyError as e:
-                db.session.rollback()
-                context.set_code(grpc.StatusCode.INTERNAL)
-                context.set_details(f"Error de base de datos: {str(e)}")
-                return mantenedor_productos_pb2.Product()
-
-    def DeleteProduct(self, request, context):
-        with app.app_context():
-            
-            product = db.session.get(Producto, request.product_id)
-            if not product:
-                context.set_code(grpc.StatusCode.NOT_FOUND)
-                context.set_details("Producto no encontrado")
-                return mantenedor_productos_pb2.DeleteProductResponse(success=False, message="Producto no encontrado")
-
-            try:
-                db.session.delete(product)
-                db.session.commit()
-                return mantenedor_productos_pb2.DeleteProductResponse(success=True, message="Producto eliminado exitosamente")
-            except SQLAlchemyError as e:
-                db.session.rollback()
-                context.set_code(grpc.StatusCode.INTERNAL)
-                context.set_details(f"Error de base de datos: {str(e)}")
-                return mantenedor_productos_pb2.DeleteProductResponse(success=False, message=f"Error de base de datos: {str(e)}")
-
-    def UploadProductImage(self, request_iterator, context):
-        with app.app_context():
-            file_data = b''
-            product_id = None
-            filename = None
-            first_chunk = True
-
-            for request_chunk in request_iterator:
-                if first_chunk:
-                    product_id = request_chunk.product_id
-                    filename = request_chunk.filename
-                    first_chunk = False
-                file_data += request_chunk.chunk_data
-
-            if product_id is None or filename is None:
-                context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
-                context.set_details("Se requiere ID de producto y nombre de archivo.")
-                return mantenedor_productos_pb2.UploadProductImageResponse(success=False, message="Falta ID de producto o nombre de archivo")
-
-            # Usar db.session.get() para la API de SQLAlchemy 2.0
-            product = db.session.get(Producto, product_id)
-            if not product:
-                context.set_code(grpc.StatusCode.NOT_FOUND)
-                context.set_details("Producto no encontrado para la carga de imagen.")
-                return mantenedor_productos_pb2.UploadProductImageResponse(success=False, message="Producto no encontrado")
-
-            
-            base, ext = os.path.splitext(filename)
-            unique_filename = f"{product_id}_{int(time.time())}{ext}"
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-
-            try:
-                with open(file_path, 'wb') as f:
-                    f.write(file_data)
-
-                # Actualizar la ruta de la imagen del producto en la base de datos
-                relative_image_url = f"/static/uploads/product_images/{unique_filename}"
-                product.imagen = relative_image_url
-                db.session.commit()
-
-                return mantenedor_productos_pb2.UploadProductImageResponse(
-                    success=True,
-                    image_url=relative_image_url,
-                    message="Imagen subida exitosamente"
-                )
-            except IOError as e:
-                db.session.rollback()
-                context.set_code(grpc.StatusCode.INTERNAL)
-                context.set_details(f"Error del sistema de archivos: {str(e)}")
-                return mantenedor_productos_pb2.UploadProductImageResponse(success=False, message=f"Error del sistema de archivos: {str(e)}")
-            except SQLAlchemyError as e:
-                db.session.rollback()
-                context.set_code(grpc.StatusCode.INTERNAL)
-                context.set_details(f"Error de base de datos al actualizar la ruta de la imagen: {str(e)}")
-                return mantenedor_productos_pb2.UploadProductImageResponse(success=False, message=f"Error de base de datos: {str(e)}")
-
-# grpc server con local
-
-def serve_grpc():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    mantenedor_productos_pb2_grpc.add_ProductMaintainerServicer_to_server(
-        ProductMaintainerServicer(), server
-    )
-    server.add_insecure_port('0.0.0.0:50051') 
-    server.start()
-    print("Servidor gRPC iniciado en el puerto 50051")
-    server.wait_for_termination()
 
 # --- Rutas de Flask ---
 
@@ -737,14 +570,8 @@ def registrar_venta():
 
 
 if __name__ == '__main__':
+
     with app.app_context():
-        db.create_all() # Crear tablas si no existen
+        db.create_all() 
 
-    # Ejecutar el servidor gRPC en un hilo separado
-    import threading
-    grpc_thread = threading.Thread(target=serve_grpc)
-    grpc_thread.daemon = True # Permite que el programa principal se cierre incluso si el hilo gRPC está ejecutándose
-    grpc_thread.start()
-
-    # Ejecutar la aplicación Flask
     app.run(debug=True, port=5000)
