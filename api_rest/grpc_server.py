@@ -3,17 +3,14 @@ import grpc
 import os
 import time
 
-from flask import Flask # Importamos Flask para usar app.app_context()
-from models import db, Producto # Importa tus modelos y la instancia de db
+from flask import Flask 
+from models import db, Producto 
 
-# Importar stubs gRPC generados
-# Asegúrate de que grpc_stubs esté en tu PYTHONPATH o en el mismo directorio
+
 from grpc_stubs import mantenedor_productos_pb2, mantenedor_productos_pb2_grpc
 from sqlalchemy.exc import SQLAlchemyError
 
-# Para poder usar db.session fuera del contexto de Flask, necesitamos un "pseudo-app"
-# que tenga la configuración de la base de datos.
-# Esta es una forma común de manejarlo cuando el servidor gRPC necesita acceder a la DB.
+
 grpc_app = Flask(__name__)
 grpc_app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/tienda'
 grpc_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
