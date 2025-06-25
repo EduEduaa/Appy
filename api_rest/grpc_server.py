@@ -176,13 +176,13 @@ def serve():
     mantenedor_productos_pb2_grpc.add_ProductMaintainerServicer_to_server(
         ProductMaintainerServicer(), server
     )
-    server.add_insecure_port('[::]:50051') # Escucha en todas las interfaces en el puerto 50051
+    server.add_insecure_port('[::]:50051') 
     server.start()
     print("Servidor gRPC iniciado en el puerto 50051")
     server.wait_for_termination()
 
 if __name__ == '__main__':
-    # Asegúrate de que la base de datos se inicialice si no existe
+    
     with grpc_app.app_context():
         db.create_all()
     serve()
