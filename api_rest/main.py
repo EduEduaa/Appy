@@ -202,9 +202,10 @@ sse_clients = []
 
 def sse_event_generator():
     """Generador que envía 'ping' a los clientes SSE para mantener la conexión."""
+    yield f"event: ping\ndata: {json.dumps({'message': 'Conexion exitosa', 'time': datetime.now().isoformat()})}\n\n"
     while True:
             # o una librería SSE más robusta (como Flask-SSE) para empujar mensajes a los clientes conectados.
-        time.sleep(10) # Intervalo para enviar pings
+        time.sleep(5) # Intervalo para enviar pings
         yield f"event: ping\ndata: {json.dumps({'time': datetime.now().isoformat()})}\n\n"
 
 @app.route('/stream')

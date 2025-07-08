@@ -1,61 +1,3 @@
-{
-  "sucursales": [
-    {"nombre": "Casa Matriz Concepción", "direccion": "Avenida Principal 100, Concepción"},
-    {"nombre": "Sucursal Centro Hualpén", "direccion": "Calle Principal 123, Hualpén"},
-    {"nombre": "Sucursal Norte Talcahuano", "direccion": "Avenida La Unión 456, Talcahuano"},
-    {"nombre": "Sucursal Sur San Pedro", "direccion": "Los Fresnos 789, San Pedro de la Paz"}
-  ],
-  "productos": [
-    {"nombre": "Laptop"},
-    {"nombre": "Mouse"},
-    {"nombre": "Teclado"},
-    {"nombre": "Monitor"}
-  ],
-  "stock": [
-    {
-      "sucursal_id": 1,
-      "producto_id": 1,
-      "cantidad": 20,
-      "precio": 820000
-    },
-    {
-      "sucursal_id": 1,
-      "producto_id": 2,
-      "cantidad": 100,
-      "precio": 18990
-    },
-    {
-      "sucursal_id": 1,
-      "producto_id": 3,
-      "cantidad": 75,
-      "precio": 52000
-    },
-    {
-      "sucursal_id": 1,
-      "producto_id": 4,
-      "cantidad": 30,
-      "precio": 210000
-    },
-    {
-      "sucursal_id": 2,
-      "producto_id": 1,
-      "cantidad": 10,
-      "precio": 850000
-    },
-    {
-      "sucursal_id": 2,
-      "producto_id": 2,
-      "cantidad": 50,
-      "precio": 19990
-    },
-    {
-      "sucursal_id": 4,
-      "producto_id": 2,
-      "cantidad": 25,
-      "precio": 21500
-    }
-  ]
-}
 
 
 // http://localhost:5000/sucursales
@@ -67,59 +9,89 @@
   {"nombre": "Sucursal Sur San Pedro", "direccion": "Los Fresnos 789, San Pedro de la Paz"}
 ]
 
-// http://localhost:5000/productos
+// http://127.0.0.1:5000/api/grpc/product
 
 [
-  {"nombre": "Laptop"},
-  {"nombre": "Mouse"},
-  {"nombre": "Teclado"},
-  {"nombre": "Monitor"}
+ {
+    "nombre": "Laptop",
+    "precio": 820000,
+    "imagen": "/static/uploads/product_images/laptop_gamer_pro_x.jpg"
+},
+ {
+    "nombre": "Mouse",
+    "precio": 20000,
+    "imagen": "/static/uploads/product_images/mouse_optico.jpg"
+},
+ {
+    "nombre": "Monitor",
+    "precio": 350000,
+    "imagen": "/static/uploads/product_images/monitor_curvo_27p.jpg"
+},
 ]
 
 // http://localhost:5000/stock/bulk
 
 [
-  {
-    "sucursal_id": 1,
-    "producto_id": 1,
-    "cantidad": 20,
-    "precio": 820000
-  },
-  {
-    "sucursal_id": 1,
-    "producto_id": 2,
-    "cantidad": 100,
-    "precio": 18990
-  },
-  {
-    "sucursal_id": 1,
-    "producto_id": 3,
-    "cantidad": 75,
-    "precio": 52000
-  },
-  {
-    "sucursal_id": 1,
-    "producto_id": 4,
-    "cantidad": 30,
-    "precio": 210000
-  },
-  {
-    "sucursal_id": 2,
-    "producto_id": 1,
-    "cantidad": 10,
-    "precio": 850000
-  },
-  {
-    "sucursal_id": 2,
-    "producto_id": 2,
-    "cantidad": 50,
-    "precio": 19990
-  },
+    {
+        "sucursal_id": 1, 
+        "producto_id": 1, 
+        "cantidad": 10 
+    },
+    {
+        "sucursal_id": 2, 
+        "producto_id": 1, 
+        "cantidad": 5
+    },
+    {
+        "sucursal_id": 3, 
+        "producto_id": 1, 
+        "cantidad": 7
+    },
+    {
+        "sucursal_id": 4, 
+        "producto_id": 1, 
+        "cantidad": 8
+    },
 
-  {
-    "sucursal_id": 4,
-    "producto_id": 2,
-    "cantidad": 25,
-    "precio": 21500
-  }
+    {
+        "sucursal_id": 1, 
+        "producto_id": 2, 
+        "cantidad": 30 
+    },
+    {
+        "sucursal_id": 2, 
+        "producto_id": 2, 
+        "cantidad": 15 
+    },
+    {
+        "sucursal_id": 3, 
+        "producto_id": 2, 
+        "cantidad": 20 
+    },
+    {
+        "sucursal_id": 4, 
+        "producto_id": 2, 
+        "cantidad": 25 
+    },
+
+    {
+        "sucursal_id": 1, 
+        "producto_id": 3, 
+        "cantidad": 8 
+    },
+    {
+        "sucursal_id": 2, 
+        "producto_id": 3, 
+        "cantidad": 4 
+    },
+    {
+        "sucursal_id": 3, 
+        "producto_id": 3, 
+        "cantidad": 6 
+    },
+    {
+        "sucursal_id": 4, 
+        "producto_id": 3, 
+        "cantidad": 5 
+    }
 ]
